@@ -1,0 +1,314 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "APIs for retrieving AWS services logs or findings",
+    "description": "Retrieve AWS services logs or findings, such as WAF logs, GuardDuty findings, Inspector findings, IoT Device Defender Audit findings, etc.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://xxxxxxxx.execute-api.us-west-2.amazonaws.com/Stage/tools"
+    }
+  ],
+  "paths": {
+    "/waf": {
+      "post": {
+        "description": "Retrieves AWS WAF logs",
+        "operationId": "RetrieveWAFLogs",
+        "requestBody": {
+          "description": "Request payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "API request payload",
+                "type": "object",
+                "properties": {
+                  "start_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-23 00:00:00",
+                    "description": "Start time for log analysis"
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-24 23:59:59",
+                    "description": "End time for log analysis"
+                  },
+                  "analysis_type": {
+                    "type": "string",
+                    "description": "Type for WAF log analysis. Default 'raw'. Options are:\n- raw: Return raw WAF logs\n- top_ip: Return top source IPs with request counts\n- top_country: Return top source countries with request counts\n- top_host: Return top host headers with request counts\n- top_terminatingRuleId: Return top terminating rule IDs with request counts\n- XSS_or_SQL_injection: Return requests with XSS or SQL injection attempts\n- top_user_agent: Return top user agents with request counts\n- top_counted_user_agent: Return top user agents with unique IP counts\n- invalid_captcha: Return requests with invalid CAPTCHA responses\n- blocked_request: Return requests that were blocked by WAF rules",
+                    "default": "raw",
+                    "enum": [
+                      "raw", 
+                      "top_ip",
+                      "top_country", 
+                      "top_host",
+                      "top_terminatingRuleId",
+                      "XSS_or_SQL_injection",
+                      "top_user_agent",
+                      "top_counted_user_agent",
+                      "invalid_captcha",
+                      "blocked_request"
+                    ]
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results, default 100",
+                    "default": 100,
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "start_time",
+                  "end_time",
+                  "analysis_type"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "analysis_type": {
+                      "type": "string",
+                      "description": "Type of analysis performed"
+                    },
+                    "start_time": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Start time of the analysis"
+                    },
+                    "end_time": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "End time of the analysis"
+                    },
+                    "results": {
+                      "type": "array",
+                      "description": "Analysis results",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "result_count": {
+                      "type": "integer",
+                      "description": "Number of results returned"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    },
+                    "details": {
+                      "type": "string",
+                      "description": "Detailed error information"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/guardduty": {
+      "post": {
+        "description": "Retrieve AWS GuardDuty findings",
+        "operationId": "RetrieveGuardDutyFindings",
+        "requestBody": {
+          "description": "Request payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "API request payload",
+                "type": "object",
+                "properties": {
+                  "start_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-23 00:00:00"
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-24 23:59:59"
+                  },
+                  "severity": {
+                    "description": "Severity levels for GuardDuty findings, High: 7, Medium: 4, Low: 1",
+                    "type": "integer",
+                    "format": "int32",
+                    "default": 1,
+                    "example": 1
+                  }
+                },
+                "required": [
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully processed"
+          }
+        }
+      }
+    },
+    "/inspector": {
+      "post": {
+        "description": "Retrieve AWS inspector findings",
+        "operationId": "RetrieveInspectorFindings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "API request payload",
+                "type": "object",
+                "properties": {
+                  "start_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-23 00:00:00"
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-24 23:59:59"
+                  },
+                  "severity": {
+                    "description": "Severity levels for Inspector findings",
+                    "type": "string",
+                    "default": "UNTRIAGED",
+                    "enum": [
+                      "INFORMATIONAL",
+                      "LOW",
+                      "MEDIUM",
+                      "HIGH",
+                      "CRITICAL"
+                    ]
+                  }
+                },
+                "required": [
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully processed"
+          }
+        }
+      }
+    },
+    "/iotsecurity": {
+      "post": {
+        "description": "Retrieve AWS IoT device defender audit findings",
+        "operationId": "RetrieveIoTAuditFindings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "API request payload",
+                "type": "object",
+                "properties": {
+                  "start_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-23 00:00:00"
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-24 23:59:59"
+                  },
+                  "severity": {
+                    "description": "Severity levels for AWS IoT device defender audit findings",
+                    "type": "string",
+                    "enum": [
+                      "LOW",
+                      "MEDIUM",
+                      "HIGH",
+                      "CRITICAL"
+                    ]
+                  }
+                },
+                "required": [
+                  "start_time",
+                  "end_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully processed"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Payload": {
+        "title": "API request payload",
+        "type": "object",
+        "properties": {
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-06-23 00:00:00"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-06-24 23:59:59"
+          }
+        },
+        "required": [
+          "start_time",
+          "end_time"
+        ]
+      }
+    }
+  }
+}

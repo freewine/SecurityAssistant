@@ -1,0 +1,235 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SecurityAssistant
+
+  Implementing a Security Assistant using Bedrock and Dify
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 300
+  Api:
+    EndpointConfiguration: REGIONAL
+
+Parameters:
+  WAFLogGroup:
+    Type: String
+    Description: WAF Cloudwatch log group
+  WAFLogRegion:
+    Type: String
+    Description: WAF Cloudwatch log region
+  GuarddutyDetectorID:
+    Type: String
+    Description: Guardduty Detector ID
+  SNSTopicsARN:
+    Type: String
+    Description: SNS Topics ARN
+  AuthToken:
+    Type: String
+    Description: API Gateway Authorizer Token
+
+Resources:
+  ToolsApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: LambdaTokenAuthorizer
+        Authorizers:
+          LambdaTokenAuthorizer:
+            FunctionArn: !GetAtt AuthorizerFunction.Arn
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: code/authorizer/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          AUTH_TOKEN: !Ref AuthToken
+  WafFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: code/waf/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        SecurityAssistant:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref ToolsApi
+            Path: /tools/waf
+            Method: post
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          WAF_LOG_GROUP: !Ref WAFLogGroup
+          WAF_LOG_REGION: !Ref WAFLogRegion
+      Policies:
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - logs:StartQuery
+              - logs:GetQueryResults
+            Resource:
+              - !Sub arn:${AWS::Partition}:logs:*:*:log-group:*
+  GuarddutyFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: code/guardduty/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        SecurityAssistant:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref ToolsApi
+            Path: /tools/guardduty
+            Method: post
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          REGION: !Ref AWS::Region
+          DETECTOR_ID: !Ref GuarddutyDetectorID
+      Policies:
+        - Statement:
+          - Sid: GuarddutyPolicy
+            Effect: Allow
+            Action:
+              - guardduty:ListFindings
+              - guardduty:GetFindings
+            Resource: "*"
+  InspectorFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: code/inspector/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        SecurityAssistant:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref ToolsApi
+            Path: /tools/inspector
+            Method: post
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          REGION: !Ref AWS::Region
+      Policies:
+        - Statement:
+          - Sid: InspectorPolicy
+            Effect: Allow
+            Action:
+              - inspector2:ListFindings
+              - inspector2:GetFinding
+            Resource: "*"
+  IoTSecurityFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: code/iotsecurity/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        SecurityAssistant:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref ToolsApi
+            Path: /tools/iotsecurity
+            Method: post
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          REGION: !Ref AWS::Region
+      Policies:
+        - Statement:
+          - Sid: InspectorPolicy
+            Effect: Allow
+            Action:
+              - iot:ListAuditFindings
+              - iot:DescribeAuditFinding
+            Resource: "*"
+  ReportsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: code/reports/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          SNS_TOPICS_ARN: !Ref SNSTopicsARN
+          WAF_FUNCTION_ARN: !GetAtt WafFunction.Arn
+          GUARDDUTY_FUNCTION_ARN: !GetAtt GuarddutyFunction.Arn
+          INSPECTOR_FUNCTION_ARN: !GetAtt InspectorFunction.Arn
+          IOTSECURITY_FUNCTION_ARN: !GetAtt IoTSecurityFunction.Arn
+      Events:
+        SecurityReports:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 0 ? * 2 *)
+            Name: SecurityReports
+            Description: Schedule to generate daily reports
+            Enabled: True
+            Input:
+              '{
+                "security_service": ["waf", "guardduty", "inspector","iotsecurity"],
+                "report_period": "weekly"
+              }'
+      Policies:
+        - Statement:
+          - Sid: Bedrock
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+            Resource:
+              - !Sub arn:${AWS::Partition}:bedrock:*::foundation-model/*
+          - Sid: SNSPolicy
+            Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub ${SNSTopicsARN}
+          - Sid: DynamoDBPolicy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+            Resource:
+              - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/SecurityReportsTable
+          - Sid: LambdaInvokePolicy
+            Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:*
+  SecurityReportsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: SecurityReportsTable
+      Tags:
+        APP: SecurityAssistant
+        ENV: PROD
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  SecurityAssistantApi:
+    Description: "API Gateway endpoint URL for Prod stage for Security Assistant function"
+    Value: !Sub "https://${ToolsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/tools"
+  WafFunction:
+    Description: "WAF Lambda Function ARN"
+    Value: !GetAtt WafFunction.Arn
+  WafFunctionIamRole:
+    Description: "Implicit IAM Role created for Security Assistant function"
+    Value: !GetAtt WafFunctionRole.Arn
