@@ -182,8 +182,8 @@ Resources:
             Enabled: True
             Input:
               '{
-                "security_service": ["waf", "guardduty", "inspector","iotsecurity"],
-                "report_period": "weekly"
+                "services": ["waf", "guardduty", "inspector","iotsecurity"],
+                "period": "weekly"
               }'
       Policies:
         - Statement:

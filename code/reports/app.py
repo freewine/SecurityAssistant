@@ -6,15 +6,19 @@ from dateutil.relativedelta import relativedelta
 from botocore.exceptions import ClientError
 from dateutil import tz
 
-bedrock_client = boto3.client('bedrock-runtime')
+# 读取环境变量
+sns_topic_arn = os.environ.get('SNS_TOPICS_ARN')
+AK = os.environ.get('AK')
+SK = os.environ.get('SK')
+BEDROCK_REGION = os.environ.get('BEDROCK_REGION', 'us-east-1')
+
+bedrock_client = boto3.client('bedrock-runtime', region_name=BEDROCK_REGION) if not (AK and SK) else boto3.client('bedrock-runtime', aws_access_key_id=AK, aws_secret_access_key=SK, region_name=BEDROCK_REGION)
 ddb_client = boto3.client('dynamodb')
 sns_client = boto3.client('sns')
 lambda_client = boto3.client('lambda')
 
-# 读取环境变量
-sns_topic_arn = os.environ.get('SNS_TOPICS_ARN')
 # 模型id
-model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+model_id = "us.amazon.nova-pro-v1:0"
 
 # ddb表, 读写容量按需
 report_table_name = 'SecurityReportsTable'
@@ -22,27 +26,27 @@ report_table_name = 'SecurityReportsTable'
 def lambda_handler(event, context):
     print(f"event: {event}")
     # daily, weekly, monthly
-    report_period = event.get("report_period", 'daily')
+    period = event.get("period", 'daily')
     # waf, guardduty, inspector, IoT device defender
-    security_services = event.get("security_service", ['waf'])
+    services = event.get("services", ['waf'])
     
-    result = generate_reports(security_services, report_period)
+    result = generate_reports(services, period)
     
-    print(f"Generated reports for services: {security_services}")
+    print(f"Generated reports for services: {services}")
 
     return {
         'statusCode': 200,
         'body': json.dumps(result)
     }
 
-def generate_reports(security_services, report_period):
+def generate_reports(services, period):
     # 获取当前日期，格式%Y-%m-%d %H:%M:%S
     current_date = datetime.now(tz=timezone.utc)
-    if report_period == 'daily': # 前一天起止时间
+    if period == 'daily': # 前一天起止时间
         start_date = current_date - timedelta(days=1)
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-    elif report_period == 'weekly':
+    elif period == 'weekly':
         start_of_this_week = current_date - timedelta(days=current_date.weekday())
         end_of_this_week = start_of_this_week + timedelta(days=6)
         # 前一周起止时间
@@ -50,22 +54,22 @@ def generate_reports(security_services, report_period):
         end_date = end_of_this_week - timedelta(days=7)
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-    elif report_period == 'monthly':
+    elif period == 'monthly':
         # 计算上个月的第一天
         first_day_of_this_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)      
         start_date = first_day_of_this_month - relativedelta(months=1)
         # 计算上个月的最后一天
         end_date = first_day_of_this_month - relativedelta(microseconds=1)
     else:
-        print('report_period error')
-        return 'report_period error'
+        print('period error')
+        return 'period error'
         
     date_str = start_date.strftime('%Y-%m-%d')
     print('start_date: %s, end_date: %s' %(start_date.strftime('%Y-%m-%d %H:%M:%S'), end_date.strftime('%Y-%m-%d %H:%M:%S')))
 
     results = []
     reports = []
-    for service in security_services:
+    for service in services:
         if service == 'waf':
             lambda_arn = os.environ.get('WAF_FUNCTION_ARN')
         elif service == 'guardduty':
@@ -81,7 +85,8 @@ def generate_reports(security_services, report_period):
         params = {
             "body": json.dumps({
                 "start_time": start_date.strftime('%Y-%m-%d %H:%M:%S'),
-                "end_time": end_date.strftime('%Y-%m-%d %H:%M:%S')
+                "end_time": end_date.strftime('%Y-%m-%d %H:%M:%S'),
+                "analysis_type": "raw"
             })
         }
         
@@ -101,16 +106,16 @@ def generate_reports(security_services, report_period):
         report_response = get_insight(payload.get('body'))
         report = report_response['message']['content'][0]['text']
         reports.append(report)
-        save_report(service, report_period, date_str, report)
-        send_report(service, report_period, date_str, report)
+        save_report(service, period, date_str, report)
+        send_report(service, period, date_str, report)
         results.append(f"{service} report generated and sent")
 
     # get reports length
     if len(reports) > 1:
         summary = summary_reports(reports)['message']['content'][0]['text']
-        send_report("Comprehensive", report_period, date_str, summary)
+        send_report("Comprehensive", period, date_str, summary)
     else:
-        send_report(service, report_period, date_str, report)
+        send_report(service, period, date_str, report)
     
     return ' | '.join(results)
 
@@ -128,7 +133,7 @@ def summary_reports(reports):
     print(system_prompts)
 
     # Inference parameters to use.
-    temperature = 0.5
+    temperature = 0.1
     top_k = 20
 
     #Base inference parameters to use.
@@ -175,7 +180,7 @@ def get_insight(logs):
     system_prompts = [{"text" : system_text}]
 
     # Inference parameters to use.
-    temperature = 0.5
+    temperature = 0.1
     top_k = 20
 
     #Base inference parameters to use.
@@ -211,12 +216,12 @@ def get_insight(logs):
         return response['output']
 
 #ddb
-def save_report(service, report_period, start_date, report):
+def save_report(service, period, start_date, report):
         # 构造要插入的项目
     item = {
         'id': {'S': str(uuid.uuid4())},
-        'security_service': {'S': service},
-        'report_period': {'S': report_period},
+        'service': {'S': service},
+        'period': {'S': period},
         'start_date': {'S': start_date},
         'report': {'S': report},
         'timestamp': {'S': datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
@@ -252,16 +257,13 @@ def get_report(ddb_client, table_name, start_date):
         else:
             return None
 
-def send_report(service, report_period, start_date, report):
+def send_report(service, period, start_date, report):
     try:
         response = sns_client.publish(
             TopicArn=sns_topic_arn,
             Message=report,
-            Subject=f'{service} {report_period} report'.upper()
+            Subject=f'{service} {period} report'.upper()
         )
         print(f"SNS response: {response}")
     except ClientError as e:
         print(f"Error: {e.response['Error']['Message']}")
-
-# if __name__ == "__main__":
-#     waf_report(report_period)

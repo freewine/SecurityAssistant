@@ -1,9 +1,9 @@
 {
-  "security_service": [
+  "services": [
     "waf",
     "guardduty",
     "inspector",
     "iotsecurity"
   ],
-  "report_period": "weekly"
+  "period": "weekly"
 }
