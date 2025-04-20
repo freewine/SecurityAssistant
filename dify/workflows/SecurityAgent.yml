@@ -9,16 +9,26 @@ dependencies:
 - current_identifier: null
   type: marketplace
   value:
-    marketplace_plugin_unique_identifier: langgenius/bedrock:0.0.9@4484b4097187376df28408110fa951c64a18588689746ed4eefc4ee4dc3ec9f2
+    marketplace_plugin_unique_identifier: langgenius/bedrock:0.0.10@caf9ec9ac745175b1ad88381dc9da0f8e876469b290ef1a27c6ed46ad16aec2f
 kind: app
 model_config:
   agent_mode:
     enabled: true
-    max_iteration: 4
+    max_iteration: 5
     strategy: function_call
     tools:
     - enabled: true
       isDeleted: false
+      notAuthor: false
+      provider_id: time
+      provider_name: time
+      provider_type: builtin
+      tool_label: Current Time
+      tool_name: current_time
+      tool_parameters:
+        format: ''
+        timezone: ''
+    - enabled: true
       notAuthor: false
       provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
       provider_name: AWS Security tools
@@ -31,7 +41,6 @@ model_config:
         limit: ''
         start_time: ''
     - enabled: true
-      isDeleted: false
       notAuthor: false
       provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
       provider_name: AWS Security tools
@@ -43,7 +52,6 @@ model_config:
         severity: ''
         start_time: ''
     - enabled: true
-      isDeleted: false
       notAuthor: false
       provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
       provider_name: AWS Security tools
@@ -55,7 +63,6 @@ model_config:
         severity: ''
         start_time: ''
     - enabled: true
-      isDeleted: false
       notAuthor: false
       provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
       provider_name: AWS Security tools
@@ -66,17 +73,6 @@ model_config:
         end_time: ''
         severity: ''
         start_time: ''
-    - enabled: true
-      isDeleted: false
-      notAuthor: false
-      provider_id: time
-      provider_name: time
-      provider_type: builtin
-      tool_label: Current Time
-      tool_name: current_time
-      tool_parameters:
-        format: ''
-        timezone: ''
   annotation_reply:
     enabled: false
   chat_prompt_config: {}
@@ -134,11 +130,11 @@ model_config:
     \ logs and findings from various AWS security services to identify threats, vulnerabilities,\
     \ and security incidents.\n</role>\n\n<abilities>\n1. **WAF Log Analyzer**: Retrieves\
     \ and analyzes AWS WAF logs to identify web application attacks.\n\n2. **Inspector\
-    \ Findings Analyzer**: Retrieves vulnerability findings from AWS Inspector.\n\n\
-    3. **GuardDuty Findings Analyzer**: Retrieves and analyzes threat findings from\
-    \ AWS GuardDuty.\n\n4. **IoT Device Defender Analyzer**: Retrieves and analyzes\
-    \ IoT device security audit findings.\n\n</abilities>\n\n<instructions>\nWhen\
-    \ responding to user queries, follow these steps:\n\n1. **Understand the Request**:\
+    \ Findings Analyzer**: Retrieves and analyzes vulnerability findings from AWS\
+    \ Inspector.\n\n3. **GuardDuty Findings Analyzer**: Retrieves and analyzes threat\
+    \ findings from AWS GuardDuty.\n\n4. **IoT Device Defender Analyzer**: Retrieves\
+    \ and analyzes IoT device security audit findings.\n\n</abilities>\n\n<instructions>\n\
+    When responding to user queries, follow these steps:\n\n1. **Understand the Request**:\
     \ Carefully analyze the user's security-related query to determine which AWS security\
     \ service logs or findings they need.\n\n2. **Retrieve Relevant Information**:\
     \ Use the appropriate tool to retrieve the necessary security logs or findings.\n\
@@ -192,7 +188,10 @@ model_config:
   - 分析本周的Inspector高危风险
   - 分析近两个月GuardDuty中等以上风险
   - 分析最近一个月IoT device defender存在的风险
-  - 分析24小时内的WAF日志
+  - 分析过去2个月XSS或者SQL注入的WAF日志
+  - 分析过去10个小时请求被拦截的WAF日志
+  - 分析昨天无效验证码的WAF日志
+  - 分析今天最新的50条WAF日志
   suggested_questions_after_answer:
     enabled: false
   text_to_speech:

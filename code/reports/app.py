@@ -86,7 +86,7 @@ def generate_reports(services, period):
             "body": json.dumps({
                 "start_time": start_date.strftime('%Y-%m-%d %H:%M:%S'),
                 "end_time": end_date.strftime('%Y-%m-%d %H:%M:%S'),
-                "analysis_type": "raw"
+                "analysis_type": "all"
             })
         }
         
@@ -110,12 +110,11 @@ def generate_reports(services, period):
         send_report(service, period, date_str, report)
         results.append(f"{service} report generated and sent")
 
-    # get reports length
+    # generate summary report
     if len(reports) > 1:
         summary = summary_reports(reports)['message']['content'][0]['text']
         send_report("Comprehensive", period, date_str, summary)
-    else:
-        send_report(service, period, date_str, report)
+        save_report("Comprehensive", period, date_str, summary)
     
     return ' | '.join(results)
 
@@ -132,19 +131,13 @@ def summary_reports(reports):
 
     print(system_prompts)
 
-    # Inference parameters to use.
-    temperature = 0.1
-    top_k = 20
-
-    #Base inference parameters to use.
-    inference_config = {"temperature": temperature}
-    # Additional inference parameters to use.
-    additional_model_fields = {"top_k": top_k}
+    # Base inference parameters to use.
+    inference_config = {"maxTokens": 4096, "temperature": 0.1, "topP": 0.9}
    
     messages = [{
-        "role": "user",
-        "content": [{"text": "Generate reposts:"}]
-    },
+            "role": "user",
+            "content": [{"text": "Generate report:"}]
+        },
     ]
 
     try:
@@ -154,7 +147,6 @@ def summary_reports(reports):
             messages=messages,
             system=system_prompts,
             inferenceConfig=inference_config,
-            additionalModelRequestFields=additional_model_fields,
             #toolConfig=tool_config
         )
 
@@ -165,7 +157,7 @@ def summary_reports(reports):
         print(f"A client error occured: {message}")
         return err.response['Error']['Message']
     else:
-        print(f"Finished generating text by using converse API with model {model_id}.")
+        print(f"Finished generating report by using converse API with model {model_id}.")
         return response['output']
 
 
@@ -179,18 +171,12 @@ def get_insight(logs):
     system_text = template.format(logs=logs)
     system_prompts = [{"text" : system_text}]
 
-    # Inference parameters to use.
-    temperature = 0.1
-    top_k = 20
-
-    #Base inference parameters to use.
-    inference_config = {"temperature": temperature}
-    # Additional inference parameters to use.
-    additional_model_fields = {"top_k": top_k}
+    # Base inference parameters to use.
+    inference_config = {"maxTokens": 4096, "temperature": 0.1, "topP": 0.9}
    
     messages = [{
         "role": "user",
-        "content": [{"text": "Generate reposts:"}]
+        "content": [{"text": "Generate report:"}]
     },
     ]
 
@@ -201,7 +187,6 @@ def get_insight(logs):
             messages=messages,
             system=system_prompts,
             inferenceConfig=inference_config,
-            additionalModelRequestFields=additional_model_fields,
             #toolConfig=tool_config
         )
 
@@ -236,7 +221,7 @@ def save_report(service, period, start_date, report):
     # 检查响应
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
         # print(f'已将消息 "{report}" 插入表 {table_name}')
-        print(f'已将报告插入表 {report_table_name} ')
+        print(f'已将{service}报告插入{report_table_name} ')
     else:
         print('插入失败')
         print(response)

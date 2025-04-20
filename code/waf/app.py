@@ -32,9 +32,10 @@ def execute_query(start_time, end_time, query_string):
     return get_query_results(query_result['queryId'])
 
 def get_raw_logs(start_time, end_time, limit=100):
-    """Get top IP addresses by request count"""
+    """Get all WAF logs"""
     query = f"""
-    fields @timestamp, @message | sort @timestamp desc
+    fields @timestamp, @message 
+    | sort @timestamp desc
     | limit {limit}
     """
     return execute_query(start_time, end_time, query)
@@ -174,11 +175,11 @@ def lambda_handler(event, context):
             }
 
         # Execute requested analysis
-        analysis_type = parameters['analysis_type'] or 'raw'
+        analysis_type = parameters['analysis_type'] or 'all'
         limit = parameters.get('limit', 100)
 
         analysis_functions = {
-            'raw': lambda: get_raw_logs(start_time, end_time, min(limit, 100)), 
+            'all': lambda: get_raw_logs(start_time, end_time, min(limit, 60)),  # Limit to 60 to avoid exceeding the LLM's context window. Adjust this value according to the LLM's context window size.
             'top_ip': lambda: get_top_ip_addresses(start_time, end_time, limit),
             'top_country': lambda: get_top_countries(start_time, end_time, limit),
             'top_host': lambda: get_top_hosts(start_time, end_time, limit),

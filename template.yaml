@@ -194,6 +194,8 @@ Resources:
               - bedrock:InvokeModelWithResponseStream
             Resource:
               - !Sub arn:${AWS::Partition}:bedrock:*::foundation-model/*
+              - !Sub arn:${AWS::Partition}:bedrock:*:*:inference-profile/*
+              - !Sub arn:${AWS::Partition}:bedrock:*:*:application-inference-profile/*
           - Sid: SNSPolicy
             Effect: Allow
             Action:
