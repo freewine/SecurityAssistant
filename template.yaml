@@ -198,8 +198,7 @@ Resources:
             Effect: Allow
             Action:
               - sns:Publish
-            Resource:
-              - !Sub ${SNSTopicsARN}
+            Resource: "*"
           - Sid: DynamoDBPolicy
             Effect: Allow
             Action:

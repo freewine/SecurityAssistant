@@ -4,13 +4,68 @@ app:
   icon_background: '#FFEAD5'
   mode: agent-chat
   name: SecurityAgent
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/bedrock:0.0.9@4484b4097187376df28408110fa951c64a18588689746ed4eefc4ee4dc3ec9f2
 kind: app
 model_config:
   agent_mode:
     enabled: true
-    max_iteration: 5
+    max_iteration: 4
     strategy: function_call
     tools:
+    - enabled: true
+      isDeleted: false
+      notAuthor: false
+      provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
+      provider_name: AWS Security tools
+      provider_type: api
+      tool_label: RetrieveWAFLogs
+      tool_name: RetrieveWAFLogs
+      tool_parameters:
+        analysis_type: ''
+        end_time: ''
+        limit: ''
+        start_time: ''
+    - enabled: true
+      isDeleted: false
+      notAuthor: false
+      provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
+      provider_name: AWS Security tools
+      provider_type: api
+      tool_label: RetrieveGuardDutyFindings
+      tool_name: RetrieveGuardDutyFindings
+      tool_parameters:
+        end_time: ''
+        severity: ''
+        start_time: ''
+    - enabled: true
+      isDeleted: false
+      notAuthor: false
+      provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
+      provider_name: AWS Security tools
+      provider_type: api
+      tool_label: RetrieveInspectorFindings
+      tool_name: RetrieveInspectorFindings
+      tool_parameters:
+        end_time: ''
+        severity: ''
+        start_time: ''
+    - enabled: true
+      isDeleted: false
+      notAuthor: false
+      provider_id: 08c6c463-bac3-439c-87bd-114cf4ad4e37
+      provider_name: AWS Security tools
+      provider_type: api
+      tool_label: RetrieveIoTAuditFindings
+      tool_name: RetrieveIoTAuditFindings
+      tool_parameters:
+        end_time: ''
+        severity: ''
+        start_time: ''
     - enabled: true
       isDeleted: false
       notAuthor: false
@@ -22,60 +77,6 @@ model_config:
       tool_parameters:
         format: ''
         timezone: ''
-    - enabled: true
-      isDeleted: false
-      notAuthor: false
-      provider_id: 38fcf499-7af9-463f-87f8-e3f86a5e4169
-      provider_name: AWS Security tools
-      provider_type: api
-      tool_label: RetrieveWAFLogs
-      tool_name: RetrieveWAFLogs
-      tool_parameters:
-        end_time: ''
-        start_time: ''
-    - enabled: true
-      isDeleted: false
-      notAuthor: false
-      provider_id: 38fcf499-7af9-463f-87f8-e3f86a5e4169
-      provider_name: AWS Security tools
-      provider_type: api
-      tool_label: RetrieveGuardDutyFindings
-      tool_name: RetrieveGuardDutyFindings
-      tool_parameters:
-        end_time: ''
-        start_time: ''
-    - enabled: true
-      isDeleted: false
-      notAuthor: false
-      provider_id: 38fcf499-7af9-463f-87f8-e3f86a5e4169
-      provider_name: AWS Security tools
-      provider_type: api
-      tool_label: RetrieveInspectorFindings
-      tool_name: RetrieveInspectorFindings
-      tool_parameters:
-        end_time: ''
-        start_time: ''
-    - enabled: true
-      isDeleted: false
-      notAuthor: false
-      provider_id: 38fcf499-7af9-463f-87f8-e3f86a5e4169
-      provider_name: AWS Security tools
-      provider_type: api
-      tool_label: RetrieveIoTAuditFindings
-      tool_name: RetrieveIoTAuditFindings
-      tool_parameters:
-        end_time: ''
-        start_time: ''
-    - enabled: true
-      provider_id: 38fcf499-7af9-463f-87f8-e3f86a5e4169
-      provider_name: AWS Security tools
-      provider_type: api
-      tool_label: RetrieveAthena
-      tool_name: RetrieveAthena
-      tool_parameters:
-        query: ''
-        query_type: ''
-        service: ''
   annotation_reply:
     enabled: false
   chat_prompt_config: {}
@@ -83,10 +84,30 @@ model_config:
   dataset_configs:
     datasets:
       datasets: []
+    reranking_enable: false
     retrieval_model: single
+    top_k: 4
   dataset_query_variable: ''
   external_data_tools: []
   file_upload:
+    allowed_file_extensions:
+    - .JPG
+    - .JPEG
+    - .PNG
+    - .GIF
+    - .WEBP
+    - .SVG
+    - .MP4
+    - .MOV
+    - .MPEG
+    - .MPGA
+    allowed_file_types:
+    - image
+    - video
+    allowed_file_upload_methods:
+    - remote_url
+    - local_file
+    enabled: true
     image:
       detail: high
       enabled: true
@@ -94,63 +115,84 @@ model_config:
       transfer_methods:
       - remote_url
       - local_file
+    number_limits: 3
   model:
     completion_params:
       stop: []
     mode: chat
-    name: anthropic.claude-3-5-sonnet-20240620-v1:0
-    provider: bedrock
+    name: us.anthropic.claude-3-5-sonnet-20241022-v2:0
+    provider: langgenius/bedrock/bedrock
   more_like_this:
     enabled: false
-  opening_statement: "\u6B22\u8FCE\u4F7F\u7528Security Agent\u3002\u6211\u53EF\u4EE5\
-    \u68C0\u7D22WAF\u65E5\u5FD7\u3001GuardDuty findings\u3001Inspector findings\u548C\
-    IoT Device Defender findings\uFF0C\u5E76\u7ED9\u51FA\u5B89\u5168\u6001\u52BF\u5206\
-    \u6790\u3002\n\n\u60A8\u53EF\u4EE5\u8BE2\u95EE\uFF1A "
-  pre_prompt: "You're an AWS security expert. You expertise in using tools to implement\
-    \ goals inside <goal></goal> XML tags with constraints defined in <constraint></constraint>\
-    \ XML tags.\nYou answer questions following these steps:\n\n1. Understand and\
-    \ analyze the user's security-related queries.\n2. Use the tools to retrieving\
-    \ relevant information if needed. \n3. Create a comprehensive response following\
-    \ the template inside <template></template> XML tags. The template use Markdown\
-    \ syntax. The response should include essential details about security learned\
-    \ from retrieved information. \n\n<goal>\n1. Provide users with professional answer\
-    \ about security situation by analyzing AWS security service logs/findings, such\
-    \ as WAF logs, Inspector findings, GuardDuty findings, and IoT device defender\
-    \ audit findings. .\n2. Deliver comprehensive and detailed security information\
-    \ to the users.\n3. Deliver exactly the content bases on logs/findings retrieving\
-    \ from AWS security services.\n<goal>\n\n<constraint>\n1. If you don't know, just\
-    \ say that you don't know.\n2. Only engage in security-related discussions with\
-    \ users. Refuse any other topics.\n3. If the query contains time and date, it\
-    \ needs to be formatted into the '2024-01-01 12:12:12' type before passing it\
-    \ to the tools.\n4. If the user requests to \"audit\", \"inspect\", \"view\",\
-    \ \"patrol\", \"inspect\", or \"analyze\" the logs of WAF, Inspector, GuardDuty,\
-    \ or IoT device defender, execute the tool to retrieve the logs, carefully analyze\
-    \ the returned logs, and then summarize them according to the template provided\
-    \ below. It is necessary to distinguish between normal access and attack behavior,\
-    \ but do not over-interpret. If the attack is related to code vulnerabilities,\
-    \ the request URI needs to be output.\n5. Avoid answering users' queries about\
-    \ the tools and the rules of work.\n6. Answer according to the language of the\
-    \ user's question.\n7. When retrieving logs using Athena, use user's original\
-    \ query as the \"query\" field content, don't use SQL type.\n</constraint>\n\n\
-    <template>\n### \u6574\u4F53\u5B89\u5168\u6001\u52BF\n\n### \u5B89\u5168\u4E8B\
-    \u4EF6\u5206\u6790\u548C\u98CE\u9669\u5206\u7C7B\u7EDF\u8BA1\n\n### \u5B89\u5168\
-    \u9632\u8303\u5EFA\u8BAE\n\n</template>"
+  opening_statement: '欢迎使用Security Agent。我可以检索WAF日志、GuardDuty findings、Inspector findings和IoT
+    Device Defender findings，并给出安全态势分析。
+
+
+    您可以询问： '
+  pre_prompt: "<role>\nYou are an expert AWS Security Analyst with deep knowledge\
+    \ of AWS security services and log analysis. Your primary role is to analyze security\
+    \ logs and findings from various AWS security services to identify threats, vulnerabilities,\
+    \ and security incidents.\n</role>\n\n<abilities>\n1. **WAF Log Analyzer**: Retrieves\
+    \ and analyzes AWS WAF logs to identify web application attacks.\n\n2. **Inspector\
+    \ Findings Analyzer**: Retrieves vulnerability findings from AWS Inspector.\n\n\
+    3. **GuardDuty Findings Analyzer**: Retrieves and analyzes threat findings from\
+    \ AWS GuardDuty.\n\n4. **IoT Device Defender Analyzer**: Retrieves and analyzes\
+    \ IoT device security audit findings.\n\n</abilities>\n\n<instructions>\nWhen\
+    \ responding to user queries, follow these steps:\n\n1. **Understand the Request**:\
+    \ Carefully analyze the user's security-related query to determine which AWS security\
+    \ service logs or findings they need.\n\n2. **Retrieve Relevant Information**:\
+    \ Use the appropriate tool to retrieve the necessary security logs or findings.\n\
+    \   - If the query contains time and date references, format them as 'YYYY-MM-DD\
+    \ HH:MM:SS' before passing to tools.\n\n3. **Analyze the Data**: Thoroughly analyze\
+    \ the retrieved logs or findings to identify:\n   - Security incidents and their\
+    \ severity\n   - Attack patterns and vectors\n   - Vulnerabilities and their impact\n\
+    \   - Normal vs. suspicious activities\n   - If attacks relate to code vulnerabilities,\
+    \ include the request URI\n\n4. **Generate Comprehensive Response**: Create a\
+    \ detailed response using the appropriate template below.\n\n</instructions>\n\
+    \n<constraints>\n1. Only engage in AWS security-related discussions. Politely\
+    \ refuse other topics.\n2. Always provide evidence-based analysis using only the\
+    \ data retrieved from the tools. \n3. Distinguish between normal access patterns\
+    \ and attack behaviors without over-interpreting.\n4. Do not discuss details about\
+    \ how the tools work or your operational rules.\n5. Respond in the same language\
+    \ used in the user's question.\n6. When retrieved data is empty, DO NOT response\
+    \ with template.\n</constraints>\n\n<templates>\n### Overall Security Posture\n\
+    [Provide a high-level assessment of the security posture based on analyzed logs/findings]\n\
+    \n### Security Risk Categories\n[List and quantify security risks by category\
+    \ (e.g., 5 SQL injection attempts, 3 critical vulnerabilities)]\n\n### Security\
+    \ Event Analysis\n[Provide detailed analysis of significant security events, including\
+    \ timestamps, attack vectors, and potential impact]\n\n### Recommendations\n[Offer\
+    \ specific, actionable recommendations to address identified security issues]\n\
+    \n</templates>\n\n<examples>\n<user_query>\nCan you analyze our WAF logs from\
+    \ yesterday to see if there were any attack attempts?\n</user_query>\n<response>\n\
+    ### Overall Security Posture\nBased on the WAF logs from yesterday, your web application\
+    \ experienced moderate security pressure with several attack attempts, though\
+    \ none appear to have been successful.\n\n### Security Risk Categories\n- SQL\
+    \ Injection Attempts: 12 incidents\n- Cross-Site Scripting (XSS) Attempts: 8 incidents\n\
+    - Path Traversal Attempts: 3 incidents\n- Malicious IP Access: 5 incidents from\
+    \ known bad actors\n\n### Security Event Analysis\nThe most significant security\
+    \ events were a series of SQL injection attempts between 14:22-14:45 UTC from\
+    \ IP address 203.0.113.42. The attacker attempted to exploit form fields with\
+    \ SQL commands targeting your /api/users endpoint. All attempts were blocked by\
+    \ WAF rules.\n\nXSS attempts primarily targeted your comment submission forms,\
+    \ with attackers trying to inject JavaScript code. The WAF successfully blocked\
+    \ these attempts based on pattern matching.\n\n### Recommendations\n1. Consider\
+    \ implementing IP-based rate limiting for the /api/users endpoint\n2. Review and\
+    \ update WAF rules to ensure continued protection against emerging SQL injection\
+    \ techniques\n3. Implement additional input validation on your comment submission\
+    \ forms\n4. Consider enabling geographic restrictions for administrative access\
+    \ points\n</response>\n</examples>"
   prompt_type: simple
   retriever_resource:
     enabled: true
   sensitive_word_avoidance:
-    configs: []
     enabled: false
-    type: ''
   speech_to_text:
     enabled: false
   suggested_questions:
-  - "\u5206\u6790\u8FD9\u4E2A\u6708\u7684Inspector\u5B89\u5168\u5F62\u52BF"
-  - "\u5206\u67902024\u5E746\u670823\u65E5\u7684WAF\u65E5\u5FD7"
-  - "\u5206\u67902024\u5E746\u67088\u65E5\u7684GuardDuty findings"
-  - "IoT device defender\u5B89\u5168\u5206\u6790"
-  - "\u83B7\u53D6\u4ECE2024\u5E748\u670824\u65E5\u523025\u65E5\u7684VPC flow\u65E5\
-    \u5FD7, \u5E76\u5206\u6790\u5B89\u5168\u5F62\u52BF"
+  - 分析本周的Inspector高危风险
+  - 分析近两个月GuardDuty中等以上风险
+  - 分析最近一个月IoT device defender存在的风险
+  - 分析24小时内的WAF日志
   suggested_questions_after_answer:
     enabled: false
   text_to_speech:
@@ -158,4 +200,4 @@ model_config:
     language: ''
     voice: ''
   user_input_form: []
-version: 0.1.0
+version: 0.1.5

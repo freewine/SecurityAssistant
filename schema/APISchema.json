@@ -13,7 +13,7 @@
   "paths": {
     "/waf": {
       "post": {
-        "description": "Retrieves AWS WAF logs",
+        "description": "Retrieves AWS WAF logs.",
         "operationId": "RetrieveWAFLogs",
         "requestBody": {
           "description": "Request payload",
@@ -147,7 +147,7 @@
     },
     "/guardduty": {
       "post": {
-        "description": "Retrieve AWS GuardDuty findings",
+        "description": "Retrieve AWS GuardDuty findings. Not specifying the severity property means retrieving all findings.",
         "operationId": "RetrieveGuardDutyFindings",
         "requestBody": {
           "description": "Request payload",
@@ -168,7 +168,7 @@
                     "example": "2024-06-24 23:59:59"
                   },
                   "severity": {
-                    "description": "Severity levels for GuardDuty findings, High: 7, Medium: 4, Low: 1",
+                    "description": "Severity levels for GuardDuty findings, High: 7, Medium: 4, Low: 1.",
                     "type": "integer",
                     "format": "int32",
                     "default": 1,
@@ -192,7 +192,7 @@
     },
     "/inspector": {
       "post": {
-        "description": "Retrieve AWS inspector findings",
+        "description": "Retrieve AWS inspector findings. Not specifying the severity property means retrieving all findings.",
         "operationId": "RetrieveInspectorFindings",
         "requestBody": {
           "content": {
@@ -241,7 +241,7 @@
     },
     "/iotsecurity": {
       "post": {
-        "description": "Retrieve AWS IoT device defender audit findings",
+        "description": "Retrieve AWS IoT device defender audit findings. Not specifying the severity property means retrieving all findings.",
         "operationId": "RetrieveIoTAuditFindings",
         "requestBody": {
           "content": {
