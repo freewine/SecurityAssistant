@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     page_iterator = paginator.paginate(
         PaginationConfig={
             # Limits the maximum number of total returned items returned while paginating. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/paginators.html
-            'MaxItems': 500
+            'MaxItems': 100
         },
         filterCriteria={
             # 'awsAccountId': [

@@ -1,5 +1,6 @@
 {
   "start_time": "2024-06-08 00:00:00",
   "end_time": "2024-06-08 23:59:59",
-  "severity": "NORMAL"
+  "severity": 4,
+  "limit": 50
 }
